@@ -13,9 +13,11 @@ export const metadata: Metadata = {
   description:
     "FiX Ai tamirat talep formu. Bilgilerinizi doldurun, eklerinizi ekleyin; mesajınız doğrudan ilgili ekibe iletilir.",
   icons: {
-    icon: [{ url: "/ai-logo.png", type: "image/png" }],
-    shortcut: "/ai-logo.png",
-    apple: "/ai-logo.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "192x192" },
+    ],
+    apple: "/apple-icon.png",
   },
   openGraph: {
     title: "FiX Ai | Tamirat Talep Formu",
