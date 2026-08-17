@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FiX Ai Destek Formu
 
-## Getting Started
+`fix.aiport.tr` için tek sayfalık destek ve talep formu. Form doldurulunca veriler ve ekler [SubmitKit](https://submitkit.dev) üzerinden sizin seçtiğiniz e-posta adresine gider. Ayrı bir backend yoktur.
 
-First, run the development server:
+## Neden SubmitKit?
+
+Ücretsiz planda:
+- Ayda 500 gönderim
+- En fazla **5 dosya** / gönderim
+- Dosya başına en fazla **5 MB**
+- Dashboard + e-posta bildirimi
+- AB barındırma (GDPR)
+
+## Gereksinimler
+
+- Node.js 20+
+- Ücretsiz [SubmitKit](https://submitkit.dev) hesabı
+- Vercel hesabı (deploy için)
+
+## SubmitKit kurulumu
+
+1. [submitkit.dev](https://submitkit.dev) üzerinden ücretsiz hesap oluşturun.
+2. **New form** ile bir form açın; hedef e-posta adresinizi bağlayın.
+3. Size verilen endpoint’teki Form ID’yi kopyalayın:
+   `https://submitkit.dev/api/f/YOUR_FORM_ID`
+4. İsterseniz panelden origin kısıtı olarak `fix.aiport.tr` ekleyin.
+
+Form ID istemci tarafında kullanılır; yine de kendi ID’nizi herkese açık paylaşmayın.
+
+## Yerel çalışma
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`.env.local` dosyasına Form ID’nizi yazın:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+NEXT_PUBLIC_SUBMITKIT_FORM_ID=YOUR_FORM_ID
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Ardından:
 
-## Learn More
+```bash
+npm install
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Uygulama varsayılan olarak [http://localhost:3000](http://localhost:3000) adresinde açılır.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Form alanları
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Ad Soyad
+- Telefon
+- E-posta
+- Adres
+- Açıklama
+- Ekler (isteğe bağlı, en fazla 5 dosya, dosya başına en fazla 5 MB)
 
-## Deploy on Vercel
+İzin verilen ek türleri: `jpg`, `jpeg`, `png`, `webp`, `gif`, `pdf`, `doc`, `docx`, `xls`, `xlsx`, `zip`, `txt`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Vercel deploy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Bu repoyu GitHub/GitLab/Bitbucket’e itin.
+2. [Vercel](https://vercel.com) üzerinde **New Project** ile bağlayın. Framework olarak Next.js algılanır.
+3. Project Settings → Environment Variables içine şunu ekleyin:
+   - `NEXT_PUBLIC_SUBMITKIT_FORM_ID`
+4. Production, Preview ve Development ortamlarına aynı değişkeni verin.
+5. Deploy edin.
+6. Domain olarak `fix.aiport.tr` ekleyin ve DNS kayıtlarını Vercel’in gösterdiği şekilde bağlayın.
+
+Ortam değişkenini ekledikten sonra yeniden deploy etmeniz gerekir.
+
+## Komutlar
+
+```bash
+npm run dev    # geliştirme sunucusu
+npm run lint   # eslint
+npm run build  # üretim derlemesi
+npm start      # üretim sunucusu
+```
