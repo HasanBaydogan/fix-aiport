@@ -9,8 +9,8 @@ export default function Home() {
           <Image
             src="/logo.png"
             alt="FiX Ai, Coded By AiPORT"
-            width={360}
-            height={140}
+            width={969}
+            height={445}
             priority
             className="h-auto w-[220px] sm:w-[300px]"
           />
@@ -20,11 +20,11 @@ export default function Home() {
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-8 sm:px-6 sm:py-10">
         <div className="mb-6 text-center sm:mb-8">
           <h1 className="text-2xl font-semibold tracking-tight text-brand-900 sm:text-3xl">
-            Destek ve Talep Formu
+            Tamirat Talep Formu
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-600 sm:text-base">
-            Bilgilerinizi doldurun, gerekirse eklerinizi ekleyin. Form gönderildiğinde
-            mesajınız ilgili ekibe e-posta olarak iletilir.
+            Tamirat taleplerinizi fotoğraf ve videolar ile gönderebilirsiniz. Ekibimiz
+            teklifinizi iletmek üzere sizinle iletişime geçecektir.
           </p>
         </div>
         <ContactForm />

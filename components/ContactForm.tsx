@@ -251,7 +251,7 @@ export default function ContactForm() {
             value={values.message}
             onChange={(event) => updateField("message", event.target.value)}
             className={`${inputClass(Boolean(errors.message))} resize-y min-h-32`}
-            placeholder="Talebinizi veya sorununuzu kısaca yazın"
+            placeholder="Talep detaylarınız"
           />
         </Field>
       </div>
@@ -377,7 +377,7 @@ export default function ContactForm() {
         disabled={submitting}
         className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-brand-500 to-brand-700 px-6 text-base font-semibold text-white shadow-lg shadow-brand-600/20 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
       >
-        {submitting ? "Gönderiliyor..." : "Formu Gönder"}
+        {submitting ? "Gönderiliyor..." : "Teklif Talebini Gönder"}
       </button>
     </form>
   );

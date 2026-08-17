@@ -9,17 +9,18 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://fix.aiport.tr"),
-  title: "FiX Ai | Destek Formu",
+  title: "FiX Ai | Tamirat Talep Formu",
   description:
-    "FiX Ai destek ve talep formu. Bilgilerinizi doldurun, eklerinizi ekleyin; mesajınız doğrudan ilgili ekibe iletilir.",
+    "FiX Ai tamirat talep formu. Bilgilerinizi doldurun, eklerinizi ekleyin; mesajınız doğrudan ilgili ekibe iletilir.",
   icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
+    icon: [{ url: "/ai-logo.png", type: "image/png" }],
+    shortcut: "/ai-logo.png",
+    apple: "/ai-logo.png",
   },
   openGraph: {
-    title: "FiX Ai | Destek Formu",
+    title: "FiX Ai | Tamirat Talep Formu",
     description:
-      "FiX Ai destek ve talep formu. Mesajınız seçilen e-posta adresine iletilir.",
+      "FiX Ai tamirat talep formu. Mesajınız seçilen e-posta adresine iletilir.",
     url: "https://fix.aiport.tr",
     siteName: "FiX Ai",
     images: [{ url: "/logo.png" }],
