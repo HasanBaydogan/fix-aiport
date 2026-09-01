@@ -20,8 +20,11 @@ export const ACCEPT_ATTRIBUTE = ALLOWED_EXTENSIONS.map(
   (ext) => `.${ext}`,
 ).join(",");
 
-export function getSubmitKitEndpoint(formId: string): string {
-  return `https://submitkit.dev/api/f/${formId}`;
+export function getSubmitKitEndpoint(formIdOrUrl: string): string {
+  if (formIdOrUrl.startsWith("http://") || formIdOrUrl.startsWith("https://")) {
+    return formIdOrUrl;
+  }
+  return `https://submitkit.dev/api/f/${formIdOrUrl}`;
 }
 
 export type FormValues = {

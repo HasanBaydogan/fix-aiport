@@ -1,0 +1,16 @@
+# Linked to hosted project fix-aiport
+project_id = "yclcelejurcuavpkurcz"
+
+[api]
+enabled = true
+
+[db]
+major_version = 17
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth/callback", "https://fix.aiport.tr/auth/callback"]
+
+[storage]
+enabled = true

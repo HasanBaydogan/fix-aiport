@@ -1,81 +1,54 @@
-# FiX Ai Destek Formu
+# FiX Ai Platform
 
-`fix.aiport.tr` için tek sayfalık destek ve talep formu. Form doldurulunca veriler ve ekler [SubmitKit](https://submitkit.dev) üzerinden sizin seçtiğiniz e-posta adresine gider. Ayrı bir backend yoktur.
+Şantiye, stok, satın alma, ürün kataloğu ve Leaflet tedarikçi haritası. Tamirat talep formu login olmadan kullanılabilir (SubmitKit).
 
-## Neden SubmitKit?
+## Stack
 
-Ücretsiz planda:
-- Ayda 500 gönderim
-- En fazla **5 dosya** / gönderim
-- Dosya başına en fazla **5 MB**
-- Dashboard + e-posta bildirimi
-- AB barındırma (GDPR)
+- Next.js 16 (App Router) + React 19 + Tailwind CSS v4
+- Supabase (Auth, Postgres RLS, Storage)
+- Leaflet / react-leaflet
+- SubmitKit (yalnızca `/tamirat`)
 
-## Gereksinimler
+## Kurulum
 
-- Node.js 20+
-- Ücretsiz [SubmitKit](https://submitkit.dev) hesabı
-- Vercel hesabı (deploy için)
-
-## SubmitKit kurulumu
-
-1. [submitkit.dev](https://submitkit.dev) üzerinden ücretsiz hesap oluşturun.
-2. **New form** ile bir form açın; hedef e-posta adresinizi bağlayın.
-3. Size verilen endpoint’teki Form ID’yi kopyalayın:
-   `https://submitkit.dev/api/f/YOUR_FORM_ID`
-4. İsterseniz panelden origin kısıtı olarak `fix.aiport.tr` ekleyin.
-
-Form ID istemci tarafında kullanılır; yine de kendi ID’nizi herkese açık paylaşmayın.
-
-## Yerel çalışma
-
-```bash
-cp .env.example .env.local
-```
-
-`.env.local` dosyasına Form ID’nizi yazın:
+1. Supabase projesi oluşturun.
+2. [`supabase/migrations/20260831100000_init_platform.sql`](supabase/migrations/20260831100000_init_platform.sql) dosyasını SQL Editor’de çalıştırın.
+3. `.env.local` oluşturun (`.env.example` dosyasındaki açıklamalara bakın):
 
 ```env
-NEXT_PUBLIC_SUBMITKIT_FORM_ID=YOUR_FORM_ID
+NEXT_PUBLIC_SUBMITKIT_FORM_ID=your_form_id_or_full_url
+NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_anon_or_publishable_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
-Ardından:
+**Service role anahtarı:** Supabase Dashboard → **Project Settings** → **API** → `service_role` (secret). Bu anahtar yalnızca sunucuda kullanılır; tedarikçi rol başvurusu onayı (`/panel/admin`) için zorunludur. Boş bırakılırsa admin panelinde uyarı görünür ve rol onayı çalışmaz.
+
+4. Migration dosyalarını sırayla SQL Editor'de çalıştırın (`supabase/migrations/`).
+
+5. İlk admin: Auth’ta bir kullanıcı oluşturun, ardından Dashboard → Authentication → user → `app_metadata` içine `{"role":"admin"}` yazın ve `profiles.role` alanını `admin` yapın. Oturumu yenileyin.
 
 ```bash
 npm install
 npm run dev
 ```
 
-Uygulama varsayılan olarak [http://localhost:3000](http://localhost:3000) adresinde açılır.
+## Görünürlük kuralları (özet)
 
-## Form alanları
+| Katman | Kim | Örnek |
+|--------|-----|--------|
+| public_anon | Herkes | Ürün temel alanları, harita pinleri, tamirat formu |
+| public_auth | Login | Fiyatlar, ürün/hizmet değerlendirmeleri |
+| private | Sahip + Admin | Şantiye, stok, satın alma, satın alınacaklar |
 
-- Ad Soyad
-- Telefon
-- E-posta
-- Adres
-- Açıklama
-- Ekler (isteğe bağlı, en fazla 5 dosya, dosya başına en fazla 5 MB)
+Roller: `buyer` | `supplier` | `admin` — yalnızca `app_metadata` (R2).
 
-İzin verilen ek türleri: `jpg`, `jpeg`, `png`, `webp`, `gif`, `pdf`, `doc`, `docx`, `xls`, `xlsx`, `zip`, `txt`.
+## Rotalar
 
-## Vercel deploy
+- `/` landing · `/tamirat` · `/urunler` · `/harita`
+- `/giris` · `/kayit` · `/sifremi-unuttum`
+- `/panel/*` (auth) · `/panel/admin` (admin)
 
-1. Bu repoyu GitHub/GitLab/Bitbucket’e itin.
-2. [Vercel](https://vercel.com) üzerinde **New Project** ile bağlayın. Framework olarak Next.js algılanır.
-3. Project Settings → Environment Variables içine şunu ekleyin:
-   - `NEXT_PUBLIC_SUBMITKIT_FORM_ID`
-4. Production, Preview ve Development ortamlarına aynı değişkeni verin.
-5. Deploy edin.
-6. Domain olarak `fix.aiport.tr` ekleyin ve DNS kayıtlarını Vercel’in gösterdiği şekilde bağlayın.
+## Deploy
 
-Ortam değişkenini ekledikten sonra yeniden deploy etmeniz gerekir.
-
-## Komutlar
-
-```bash
-npm run dev    # geliştirme sunucusu
-npm run lint   # eslint
-npm run build  # üretim derlemesi
-npm start      # üretim sunucusu
-```
+Vercel’e bağlayın; yukarıdaki env değişkenlerini Production/Preview’a ekleyin.
