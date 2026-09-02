@@ -74,6 +74,7 @@ export type PurchaseFormValues = {
   qty: string;
   unit: string;
   unit_price: string;
+  total_price: string;
   purchased_at: string;
   supplier_ref: string;
   notes: string;
@@ -173,5 +174,94 @@ export function validateReview(values: ReviewFormValues): ReviewFormErrors {
   const errors: ReviewFormErrors = {};
   const rating = Number(values.rating);
   if (!rating || rating < 1 || rating > 5) errors.rating = "1–5 arası puan seçin.";
+  return errors;
+}
+
+export type DailyLogFormValues = {
+  site_id: string;
+  warehouse_id: string;
+  logged_at: string;
+  note: string;
+};
+
+export type DailyLogFormErrors = Partial<
+  Record<keyof DailyLogFormValues | "files", string>
+>;
+
+/** @deprecated Use DailyLogFormValues */
+export type SiteProgressFormValues = DailyLogFormValues;
+
+/** @deprecated Use DailyLogFormErrors */
+export type SiteProgressFormErrors = DailyLogFormErrors;
+
+export const dailyLogFormMeta = { dataScope: "private" as DataScope };
+
+/** @deprecated Use dailyLogFormMeta */
+export const siteProgressFormMeta = dailyLogFormMeta;
+
+export function validateDailyLog(
+  values: DailyLogFormValues,
+  fileCount: number,
+): DailyLogFormErrors {
+  const errors: DailyLogFormErrors = {};
+  if (!values.logged_at.trim()) errors.logged_at = "Tarih zorunludur.";
+  else if (!/^\d{4}-\d{2}-\d{2}$/.test(values.logged_at.trim())) {
+    errors.logged_at = "Geçerli bir tarih girin.";
+  }
+  if (values.note.trim().length > 5000) {
+    errors.note = "Not en fazla 5000 karakter olabilir.";
+  }
+  if (fileCount < 1 && !values.note.trim()) {
+    errors.note = "Not yazın veya en az bir fotoğraf ekleyin.";
+  }
+  if (fileCount > 5) errors.files = "En fazla 5 fotoğraf ekleyebilirsiniz.";
+  return errors;
+}
+
+/** @deprecated Use validateDailyLog */
+export function validateSiteProgress(
+  values: DailyLogFormValues,
+  fileCount: number,
+): DailyLogFormErrors {
+  return validateDailyLog(values, fileCount);
+}
+
+export type CategoryFormValues = {
+  name: string;
+  slug: string;
+  parent_id: string;
+  sort_order: string;
+};
+
+export type CategoryFormErrors = Partial<Record<keyof CategoryFormValues, string>>;
+
+export function normalizeCategorySlug(raw: string): string {
+  return raw
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+export function validateCategory(values: CategoryFormValues): CategoryFormErrors {
+  const errors: CategoryFormErrors = {};
+  const name = values.name.trim();
+  const slug = normalizeCategorySlug(values.slug);
+
+  if (!name) errors.name = "Ad zorunludur.";
+  else if (name.length < 2) errors.name = "Ad en az 2 karakter olmalıdır.";
+
+  if (!slug) errors.slug = "Slug zorunludur.";
+  else if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    errors.slug = "Slug yalnızca küçük harf, rakam ve tire içerebilir.";
+  }
+
+  if (values.sort_order.trim()) {
+    const sortOrder = Number(values.sort_order.replace(",", "."));
+    if (Number.isNaN(sortOrder)) errors.sort_order = "Geçerli bir sıra numarası girin.";
+  }
+
   return errors;
 }

@@ -32,7 +32,7 @@ Her yeni özellik / senaryoda bu kurallar uygulanır. PR veya plan notunda: Sena
 - Ürün `published` olunca bağlı `user_product_locations` kayıtları otomatik `published`
 
 ## R7 Şantiye
-- Stok / satın alma / liste `site_id` + ownership
+- Stok / satın alma / liste / ilerleme günlüğü (foto + tarih) `site_id` + ownership
 - Soft-delete (archive); hard delete admin
 
 ## R8 Değerlendirme

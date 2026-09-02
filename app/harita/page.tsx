@@ -7,8 +7,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getSessionUser } from "@/lib/auth/roles";
 import {
+  getCategoryPathLabel,
   getMainCategories,
-  MAIN_CATEGORY_PIN_COLORS,
   matchesCategoryFilter,
   pinColorForCategory,
   resolveMainCategory,
@@ -43,7 +43,7 @@ export default async function HaritaPage({
         client
           .from("user_product_locations")
           .select(
-            "id, lat, lng, label, product_name, product_id, products(category_id, categories(id, name, parent_id))",
+            "id, lat, lng, label, product_name, product_id, products(category_id, embedded_in_supplier, categories(id, name, parent_id))",
           )
           .eq("status", "published"),
         client.from("categories").select("id, name, slug, parent_id, sort_order").order("sort_order"),
@@ -74,11 +74,15 @@ export default async function HaritaPage({
       const productRaw = loc.products as unknown;
       const product = (Array.isArray(productRaw) ? productRaw[0] : productRaw) as {
         category_id: string | null;
+        embedded_in_supplier?: boolean | null;
         categories:
           | { id: string; name: string; parent_id: string | null }
           | { id: string; name: string; parent_id: string | null }[]
           | null;
       } | null;
+
+      // Gömülü ürünler haritada ürün pini olarak görünmez
+      if (product?.embedded_in_supplier) continue;
 
       const catRel = product?.categories;
       const catObj = Array.isArray(catRel) ? catRel[0] : catRel;
@@ -86,13 +90,8 @@ export default async function HaritaPage({
 
       if (!matchesCategoryFilter(categoryId, params.category, categories)) continue;
 
-      const main = resolveMainCategory(categoryId, categories);
-      const sub = catObj;
-      const categoryLabel = main
-        ? sub && sub.parent_id
-          ? `${main.name} › ${sub.name}`
-          : main.name
-        : null;
+      const categoryLabel =
+        categoryId != null ? getCategoryPathLabel(categoryId, categories) : null;
 
       pins.push({
         id: loc.id,
@@ -153,7 +152,7 @@ export default async function HaritaPage({
             Tümü
           </Link>
           {mainCategories.map((main) => {
-            const color = MAIN_CATEGORY_PIN_COLORS[main.slug] ?? "#64748b";
+            const color = pinColorForCategory(main.id, categories);
             const active = params.category === main.id || activeMain?.id === main.id;
             return (
               <Link
@@ -190,7 +189,7 @@ export default async function HaritaPage({
             <span
               className="inline-block h-3 w-3 rounded-full ring-2 ring-white"
               style={{
-                backgroundColor: MAIN_CATEGORY_PIN_COLORS[main.slug] ?? "#64748b",
+                backgroundColor: pinColorForCategory(main.id, categories),
               }}
               aria-hidden
             />

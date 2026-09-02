@@ -5,10 +5,11 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getSessionUser } from "@/lib/auth/roles";
 import {
+  getCategoryPathLabel,
+  getChildren,
   getMainCategories,
-  getSubcategories,
-  MAIN_CATEGORY_PIN_COLORS,
   matchesCategoryFilter,
+  pinColorForCategory,
   resolveMainCategory,
   type CategoryRow,
 } from "@/lib/categories";
@@ -102,6 +103,15 @@ export default async function UrunlerPage({
     });
   }
 
+  function descendantCategories(parentId: string): CategoryRow[] {
+    const result: CategoryRow[] = [];
+    for (const child of getChildren(categories, parentId)) {
+      result.push(child);
+      result.push(...descendantCategories(child.id));
+    }
+    return result;
+  }
+
   return (
     <PageShell userEmail={session?.user.email} role={session?.role} className="space-y-6">
       <PageHeader
@@ -139,7 +149,7 @@ export default async function UrunlerPage({
           Tümü
         </Link>
         {mainCategories.map((main) => {
-          const color = MAIN_CATEGORY_PIN_COLORS[main.slug] ?? "#64748b";
+          const color = pinColorForCategory(main.id, categories);
           const active = params.category === main.id || activeMain?.id === main.id;
           return (
             <Link
@@ -176,8 +186,8 @@ export default async function UrunlerPage({
           {(sections ?? mainCategories).map((main) => {
             const sectionProducts = productsForMain(main.id);
             if (sectionProducts.length === 0) return null;
-            const subs = getSubcategories(categories, main.id);
-            const color = MAIN_CATEGORY_PIN_COLORS[main.slug] ?? "#64748b";
+            const descendants = descendantCategories(main.id);
+            const color = pinColorForCategory(main.id, categories);
 
             return (
               <section key={main.id} className="space-y-4">
@@ -190,7 +200,7 @@ export default async function UrunlerPage({
                   <h2 className="text-lg font-semibold text-brand-900">{main.name}</h2>
                 </div>
 
-                {subs.length > 0 ? (
+                {descendants.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     <Link
                       href={buildCategoryHref(main.id)}
@@ -202,7 +212,7 @@ export default async function UrunlerPage({
                     >
                       Tümü
                     </Link>
-                    {subs.map((sub) => (
+                    {descendants.map((sub) => (
                       <Link
                         key={sub.id}
                         href={buildCategoryHref(sub.id)}
@@ -212,7 +222,7 @@ export default async function UrunlerPage({
                             : "border-brand-200 hover:bg-brand-50"
                         }`}
                       >
-                        {sub.name}
+                        {getCategoryPathLabel(sub.id, categories)}
                       </Link>
                     ))}
                   </div>
@@ -249,8 +259,9 @@ function ProductGrid({
       {products.map((p) => {
         const cat = p.categories;
         const main = resolveMainCategory(p.category_id, categories);
-        const subName = cat?.parent_id ? cat.name : null;
-        const color = main ? MAIN_CATEGORY_PIN_COLORS[main.slug] : undefined;
+        const pathLabel =
+          p.category_id != null ? getCategoryPathLabel(p.category_id, categories) : null;
+        const color = pinColorForCategory(p.category_id, categories);
 
         return (
           <Link
@@ -275,16 +286,14 @@ function ProductGrid({
             </div>
             <div className="mt-4 flex items-start justify-between gap-2">
               <h3 className="font-semibold text-brand-900">{p.name}</h3>
-              {subName || main ? (
+              {pathLabel ? (
                 <span className="shrink-0 rounded-full bg-brand-50 px-2 py-0.5 text-xs text-brand-700">
-                  {subName ?? main?.name}
+                  {cat?.name ?? pathLabel}
                 </span>
               ) : null}
             </div>
-            {main && subName ? (
-              <p className="mt-1 text-xs text-slate-500">
-                {main.name} › {subName}
-              </p>
+            {pathLabel && main && cat?.parent_id ? (
+              <p className="mt-1 text-xs text-slate-500">{pathLabel}</p>
             ) : null}
             <p className="mt-2 text-sm text-slate-600">
               {p.weight_kg != null ? `${p.weight_kg} kg` : "Ağırlık —"}

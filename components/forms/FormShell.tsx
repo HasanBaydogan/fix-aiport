@@ -6,12 +6,14 @@ import { buttonPrimaryClass, cardClass, type FormStatus } from "@/lib/forms/type
 export function FormShell({
   children,
   onSubmit,
-  submitting,
+  submitting = false,
   status,
   submitLabel,
   honeypot,
   onHoneypotChange,
   encType,
+  framed = true,
+  footer,
 }: {
   children: ReactNode;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void | Promise<void>;
@@ -21,10 +23,15 @@ export function FormShell({
   honeypot?: string;
   onHoneypotChange?: (value: string) => void;
   encType?: string;
+  /** When false, skip the card chrome (e.g. already wrapped by AuthSplitLayout). */
+  framed?: boolean;
+  footer?: ReactNode;
 }) {
+  const frameClass = framed ? cardClass : "";
+
   if (status.type === "success") {
     return (
-      <div className={`${cardClass} text-center`}>
+      <div className={`${frameClass} text-center`.trim()}>
         <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-white">
           <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" aria-hidden="true">
             <path
@@ -46,8 +53,8 @@ export function FormShell({
     <form
       onSubmit={onSubmit}
       noValidate
-      encType={encType}
-      className={`relative ${cardClass}`}
+      {...(encType ? { encType } : {})}
+      className={`relative ${frameClass}`.trim()}
     >
       {children}
 
@@ -75,9 +82,15 @@ export function FormShell({
         </p>
       ) : null}
 
-      <button type="submit" disabled={submitting} className={`mt-6 ${buttonPrimaryClass}`}>
+      <button
+        type="submit"
+        disabled={submitting}
+        className={`mt-6 ${buttonPrimaryClass}`}
+      >
         {submitting ? "Kaydediliyor..." : submitLabel}
       </button>
+
+      {footer}
     </form>
   );
 }

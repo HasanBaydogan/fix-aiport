@@ -1,6 +1,21 @@
+import type { ReactNode } from "react";
 import { inputClass } from "@/lib/forms/types";
 import type { CategoryRow } from "@/lib/categories";
-import { getMainCategories, getSubcategories } from "@/lib/categories";
+import { buildCategoryTree, type CategoryTreeNode } from "@/lib/categories";
+
+function renderCategoryOptions(nodes: CategoryTreeNode[], depth = 0): ReactNode[] {
+  return nodes.flatMap((node) => {
+    const prefix = depth > 0 ? "— ".repeat(depth) : "";
+    const option = (
+      <option key={node.id} value={node.id}>
+        {prefix}
+        {node.name}
+      </option>
+    );
+    if (node.children.length === 0) return [option];
+    return [option, ...renderCategoryOptions(node.children, depth + 1)];
+  });
+}
 
 export function CategorySelect({
   name,
@@ -15,7 +30,7 @@ export function CategorySelect({
   categories: CategoryRow[];
   defaultValue?: string;
 }) {
-  const mains = getMainCategories(categories);
+  const tree = buildCategoryTree(categories);
 
   return (
     <div>
@@ -31,25 +46,7 @@ export function CategorySelect({
         className={inputClass(false)}
       >
         <option value="">Seçin…</option>
-        {mains.map((main) => {
-          const subs = getSubcategories(categories, main.id);
-          if (subs.length === 0) {
-            return (
-              <option key={main.id} value={main.id}>
-                {main.name}
-              </option>
-            );
-          }
-          return (
-            <optgroup key={main.id} label={main.name}>
-              {subs.map((sub) => (
-                <option key={sub.id} value={sub.id}>
-                  {sub.name}
-                </option>
-              ))}
-            </optgroup>
-          );
-        })}
+        {renderCategoryOptions(tree)}
       </select>
     </div>
   );

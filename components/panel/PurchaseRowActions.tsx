@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import { updatePurchase, archivePurchase } from "@/lib/actions";
 import { ArchiveRecordButton } from "@/components/panel/ArchiveRecordButton";
+import { PurchaseInvoiceSection } from "@/components/panel/PurchaseInvoiceSection";
+import { PurchasePriceFields } from "@/components/panel/PurchasePriceFields";
 import { inputClass, buttonPrimaryClass } from "@/lib/forms/types";
 import type { Purchase } from "@/lib/supabase/database.types";
 
@@ -21,6 +23,7 @@ export function PurchaseRowActions({ row }: { row: Purchase }) {
         >
           Düzenle
         </button>
+        <PurchaseInvoiceSection row={row} />
         <ArchiveRecordButton onArchive={() => archivePurchase(row.id)} />
       </div>
     );
@@ -62,13 +65,11 @@ export function PurchaseRowActions({ row }: { row: Purchase }) {
           className={inputClass(false)}
         />
         <input name="unit" defaultValue={row.unit} className={inputClass(false)} />
-        <input
-          name="unit_price"
-          type="number"
-          step="0.01"
-          defaultValue={row.unit_price != null ? String(row.unit_price) : ""}
-          className={inputClass(false)}
-          placeholder="Birim fiyat"
+        <PurchasePriceFields
+          compact
+          defaultUnitPrice={row.unit_price}
+          defaultQty={Number(row.qty)}
+          currency={row.currency}
         />
         <input
           name="supplier_ref"

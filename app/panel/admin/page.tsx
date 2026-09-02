@@ -1,11 +1,6 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createCategory } from "@/lib/actions";
 import { getSessionUser } from "@/lib/auth/roles";
-import {
-  ActionForm,
-  SelectInput,
-  TextInput,
-} from "@/components/forms/ActionForm";
 import { ModerateButtons } from "@/components/panel/ModerateButtons";
 import { ServiceRoleBanner } from "@/components/panel/ServiceRoleBanner";
 import { RoleRequestButtons } from "@/components/panel/RoleRequestButtons";
@@ -23,7 +18,6 @@ export default async function AdminPage() {
     { data: pendingLocations },
     { data: pendingProductLocs },
     { data: roleReqs },
-    { data: categories },
   ] = await Promise.all([
     session.supabase
       .from("products")
@@ -46,7 +40,6 @@ export default async function AdminPage() {
       .from("role_requests")
       .select("id, user_id, note, status, created_at")
       .eq("status", "pending"),
-    session.supabase.from("categories").select("id, name, parent_id").order("sort_order"),
   ]);
 
   const queues = [
@@ -64,7 +57,7 @@ export default async function AdminPage() {
     {
       title: "Bekleyen tedarikçi profilleri",
       count: (pendingProfiles ?? []).length,
-      empty: "Bekleyen profil yok.",
+      empty: "Bekleyen profil yok. Onaylandığında bağlı pin ve ürünler otomatik yayınlanır.",
       items: (pendingProfiles ?? []).map((p) => ({
         id: p.id,
         title: p.org_name,
@@ -75,7 +68,7 @@ export default async function AdminPage() {
     {
       title: "Bekleyen tedarikçi harita pinleri",
       count: (pendingLocations ?? []).length,
-      empty: "Bekleyen pin yok.",
+      empty: "Bekleyen pin yok. (Profil onaylı tedarikçilerde pinler otomatik yayınlanır.)",
       items: (pendingLocations ?? []).map((p) => ({
         id: p.id,
         title: p.label || "Pin",
@@ -154,20 +147,16 @@ export default async function AdminPage() {
         </ul>
       </section>
 
-      <SectionCard title="Kategori ekle" description="Yeni segment veya alt kategori oluşturun.">
-        <ActionForm action={createCategory} submitLabel="Kategori ekle">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <TextInput name="name" label="Ad" required />
-            <TextInput name="slug" label="Slug" required placeholder="ornek-slug" />
-            <SelectInput
-              name="parent_id"
-              label="Üst kategori"
-              options={(categories ?? [])
-                .filter((c) => !c.parent_id)
-                .map((c) => ({ value: c.id, label: c.name }))}
-            />
-          </div>
-        </ActionForm>
+      <SectionCard
+        title="Kategori yönetimi"
+        description="Segment ve alt segmentleri ekleyin, düzenleyin veya sıralayın."
+      >
+        <Link
+          href="/panel/kategoriler"
+          className="inline-flex rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+        >
+          Kategoriler sayfasına git
+        </Link>
       </SectionCard>
     </div>
   );

@@ -1,15 +1,51 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { fulfillPurchaseListItem } from "@/lib/actions";
+import { PurchasePriceFields } from "@/components/panel/PurchasePriceFields";
 import { inputClass, buttonPrimaryClass } from "@/lib/forms/types";
-import type { PurchaseListItem } from "@/lib/supabase/database.types";
+import { formatMoney } from "@/lib/purchases";
+import type {
+  PurchaseListItem,
+  PurchaseListItemOffer,
+} from "@/lib/supabase/database.types";
 
-export function FulfillListItemButton({ item }: { item: PurchaseListItem }) {
+type SupplierOption = { id: string; org_name: string };
+
+function offerLabel(offer: PurchaseListItemOffer): string {
+  const supplier = offer.supplier_profiles?.org_name;
+  const place = offer.place_name?.trim();
+  if (supplier && place) return `${supplier} · ${place}`;
+  return supplier ?? place ?? "Teklif";
+}
+
+export function FulfillListItemButton({
+  item,
+  suppliers: _suppliers,
+}: {
+  item: PurchaseListItem;
+  suppliers?: SupplierOption[];
+}) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [selectedOfferId, setSelectedOfferId] = useState("");
+  const [unitPrice, setUnitPrice] = useState("");
+  const [supplierRef, setSupplierRef] = useState("");
   const today = new Date().toISOString().slice(0, 10);
+
+  const offers = item.purchase_list_item_offers ?? [];
+
+  useEffect(() => {
+    if (!selectedOfferId) return;
+    const offer = offers.find((o) => o.id === selectedOfferId);
+    if (!offer) return;
+    if (offer.unit_price != null) {
+      setUnitPrice(String(offer.unit_price));
+    }
+    const orgName = offer.supplier_profiles?.org_name;
+    setSupplierRef(orgName ?? offer.place_name?.trim() ?? "");
+  }, [selectedOfferId, offers]);
 
   if (!open) {
     return (
@@ -29,6 +65,7 @@ export function FulfillListItemButton({ item }: { item: PurchaseListItem }) {
       action={(formData) => {
         setError(null);
         formData.set("list_item_id", item.id);
+        if (selectedOfferId) formData.set("offer_id", selectedOfferId);
         startTransition(async () => {
           const result = await fulfillPurchaseListItem(formData);
           if (result.error) setError(result.error);
@@ -39,11 +76,36 @@ export function FulfillListItemButton({ item }: { item: PurchaseListItem }) {
       <p className="text-xs font-semibold text-brand-900">
         {item.product_name} · {item.qty} {item.unit}
       </p>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <input type="hidden" name="qty" value={String(item.qty)} />
+      {offers.length > 0 ? (
         <div>
-          <label className="mb-1 block text-xs text-slate-600">Birim fiyat (TRY)</label>
-          <input name="unit_price" type="number" step="0.01" className={inputClass(false)} />
+          <label className="mb-1 block text-xs text-slate-600">
+            Tekliften doldur (opsiyonel)
+          </label>
+          <select
+            value={selectedOfferId}
+            onChange={(e) => setSelectedOfferId(e.target.value)}
+            className={inputClass(false)}
+          >
+            <option value="">— Manuel giriş —</option>
+            {offers.map((offer) => (
+              <option key={offer.id} value={offer.id}>
+                {offerLabel(offer)}
+                {offer.unit_price != null
+                  ? ` · ${formatMoney(Number(offer.unit_price), offer.currency)}`
+                  : ""}
+              </option>
+            ))}
+          </select>
         </div>
+      ) : null}
+      <div className="grid gap-2 sm:grid-cols-2">
+        <PurchasePriceFields
+          compact
+          defaultQty={Number(item.qty)}
+          defaultUnitPrice={unitPrice ? Number(unitPrice) : undefined}
+          key={`${selectedOfferId}-${unitPrice}`}
+        />
         <div>
           <label className="mb-1 block text-xs text-slate-600">Tarih</label>
           <input
@@ -55,7 +117,12 @@ export function FulfillListItemButton({ item }: { item: PurchaseListItem }) {
         </div>
         <div className="sm:col-span-2">
           <label className="mb-1 block text-xs text-slate-600">Tedarikçi (opsiyonel)</label>
-          <input name="supplier_ref" className={inputClass(false)} />
+          <input
+            name="supplier_ref"
+            value={supplierRef}
+            onChange={(e) => setSupplierRef(e.target.value)}
+            className={inputClass(false)}
+          />
         </div>
       </div>
       <label className="flex items-center gap-2 text-sm text-slate-700">

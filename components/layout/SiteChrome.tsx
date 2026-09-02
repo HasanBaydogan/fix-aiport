@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { NavLink } from "@/components/layout/NavLink";
+import { PanelNavGroup } from "@/components/layout/PanelNavGroup";
 import type { AppRole } from "@/lib/supabase/database.types";
 import { roleLabel } from "@/lib/auth/roles";
 import { buttonCompactClass } from "@/lib/ui/classes";
@@ -103,38 +104,58 @@ export function SiteFooter() {
 }
 
 export function PanelNav({ role }: { role: AppRole }) {
-  const buyerLinks = [
-    { href: "/panel", label: "Özet", exact: true },
-    { href: "/panel/santiyeler", label: "Şantiyelerim" },
-    { href: "/panel/stok", label: "Stok" },
-    { href: "/panel/satin-alimlar", label: "Satın alımlarım" },
-    { href: "/panel/satin-alinacaklar", label: "Satın alınacaklar" },
-    { href: "/panel/konumlar", label: "Ürün konumlarım" },
-    { href: "/panel/urun-ekle", label: "Ürün ekle" },
-  ];
-
-  const supplierLinks = [{ href: "/panel/tedarikci", label: "Tedarikçi profili" }];
-  const adminLinks = [{ href: "/panel/admin", label: "Admin" }];
-
-  const links: Array<{ href: string; label: string; exact?: boolean; admin?: boolean }> = [
-    ...buyerLinks,
-    ...(role === "supplier" || role === "admin" ? supplierLinks : []),
-    ...(role === "admin" ? adminLinks.map((l) => ({ ...l, admin: true })) : []),
-    { href: "/harita", label: "Harita" },
-  ];
+  const showSupplier = role === "supplier" || role === "admin";
+  const showAdmin = role === "admin";
 
   return (
-    <nav className="flex flex-wrap gap-1 rounded-2xl border border-brand-100 bg-white p-2 text-sm">
-      {links.map((link) => (
-        <NavLink
-          key={link.href}
-          href={link.href}
-          exact={link.exact}
-          variant={link.admin ? "admin" : "panel"}
-        >
-          {link.label}
+    <nav className="flex flex-wrap items-center gap-1 rounded-2xl border border-brand-100 bg-white p-2 text-sm">
+      <NavLink href="/panel" exact variant="panel">
+        Özet
+      </NavLink>
+
+      <PanelNavGroup
+        label="Şantiye"
+        items={[
+          { href: "/panel/gunluk", label: "Günlük" },
+          { href: "/panel/santiyeler", label: "Şantiyelerim" },
+          { href: "/panel/depolar", label: "Depolarım" },
+        ]}
+      />
+
+      <PanelNavGroup
+        label="Malzeme"
+        items={[
+          { href: "/panel/stok", label: "Stok" },
+          { href: "/panel/satin-alimlar", label: "Satın alımlarım" },
+          { href: "/panel/satin-alinacaklar", label: "Satın alınacaklar" },
+        ]}
+      />
+
+      <PanelNavGroup
+        label="Katalog"
+        items={[
+          { href: "/panel/urun-ekle", label: "Ürün ekle" },
+          { href: "/panel/konumlar", label: "Ürün konumlarım" },
+          { href: "/harita", label: "Harita" },
+        ]}
+      />
+
+      {showSupplier ? (
+        <NavLink href="/panel/tedarikci" variant="panel">
+          Tedarikçi
         </NavLink>
-      ))}
+      ) : null}
+
+      {showAdmin ? (
+        <PanelNavGroup
+          label="Admin"
+          variant="admin"
+          items={[
+            { href: "/panel/admin", label: "Moderasyon" },
+            { href: "/panel/kategoriler", label: "Kategoriler" },
+          ]}
+        />
+      ) : null}
     </nav>
   );
 }

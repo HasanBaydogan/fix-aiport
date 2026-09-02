@@ -49,6 +49,7 @@ export function ForgotPasswordForm() {
       submitting={submitting}
       status={status}
       submitLabel="Bağlantı gönder"
+      framed={false}
     >
       <Field id="email" label="E-posta" required error={errors.email}>
         <input

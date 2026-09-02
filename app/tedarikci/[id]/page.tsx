@@ -58,6 +58,14 @@ export default async function TedarikciPublicPage({
     .eq("supplier_profile_id", id)
     .eq("status", "published");
 
+  const { data: firmProducts } = await supabase
+    .from("products")
+    .select("id, name, weight_kg, sourced_from_text, embedded_in_supplier, categories(name)")
+    .eq("supplier_profile_id", id)
+    .eq("status", "published")
+    .order("created_at", { ascending: false })
+    .limit(48);
+
   const mapPins: GlobalMapPin[] = (locations ?? []).map((loc) => ({
     id: loc.id,
     lat: loc.lat,
@@ -146,6 +154,45 @@ export default async function TedarikciPublicPage({
           </div>
         </div>
       ) : null}
+
+      <div className={cardClass}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-semibold text-brand-900">Firma ürünleri</h2>
+          <Link
+            href={`/urunler?supplier=${id}`}
+            className="text-sm font-medium text-brand-600 hover:underline"
+          >
+            Tümünü gör →
+          </Link>
+        </div>
+        {(firmProducts ?? []).length === 0 ? (
+          <p className="mt-3 text-sm text-slate-500">Henüz yayınlanmış ürün yok.</p>
+        ) : (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {(firmProducts ?? []).map((p) => {
+              const cat = p.categories as
+                | { name: string }
+                | { name: string }[]
+                | null;
+              const catName = Array.isArray(cat) ? cat[0]?.name : cat?.name;
+              return (
+                <Link
+                  key={p.id}
+                  href={`/urunler/${p.id}`}
+                  className="rounded-xl border border-brand-100 bg-brand-50/40 px-3 py-3 transition hover:border-brand-200 hover:bg-brand-50"
+                >
+                  <p className="font-medium text-brand-900">{p.name}</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {catName ?? "Segment yok"}
+                    {p.weight_kg != null ? ` · ${p.weight_kg} kg` : ""}
+                    {p.embedded_in_supplier ? " · gömülü" : ""}
+                  </p>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       <div className={cardClass}>
         <h2 className="font-semibold text-brand-900">Hizmet değerlendirmeleri</h2>

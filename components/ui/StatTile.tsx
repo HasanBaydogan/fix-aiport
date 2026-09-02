@@ -8,14 +8,13 @@ export function StatTile({
 }: {
   label: string;
   value: string | number;
-  href: string;
+  href?: string;
   hint?: string;
 }) {
-  return (
-    <Link
-      href={href}
-      className="group rounded-2xl border border-brand-100 bg-brand-50/50 px-4 py-4 transition hover:border-brand-200 hover:bg-brand-50"
-    >
+  const className =
+    "group rounded-2xl border border-brand-100 bg-brand-50/50 px-4 py-4 transition hover:border-brand-200 hover:bg-brand-50";
+  const body = (
+    <>
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
         {label}
       </p>
@@ -23,6 +22,16 @@ export function StatTile({
       {hint ? (
         <p className="mt-1 text-xs text-slate-500 group-hover:text-brand-600">{hint}</p>
       ) : null}
-    </Link>
+    </>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className={className}>
+        {body}
+      </Link>
+    );
+  }
+
+  return <div className={className}>{body}</div>;
 }

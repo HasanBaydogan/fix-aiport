@@ -36,6 +36,7 @@ export type Product = {
   dimension_unit: string;
   sourced_from_text: string | null;
   supplier_profile_id: string | null;
+  embedded_in_supplier: boolean;
   images: string[];
   description: string | null;
   status: ContentStatus;
@@ -151,6 +152,34 @@ export type Purchase = {
   archived_at: string | null;
   created_at: string;
   sites?: { name: string } | null;
+  purchase_attachments?: PurchaseAttachment[];
+};
+
+export type PurchaseAttachment = {
+  id: string;
+  purchase_id: string;
+  site_id: string;
+  storage_path: string;
+  file_name: string;
+  content_type: string | null;
+  byte_size: number | null;
+  created_at: string;
+  /** Signed URL — filled at read time */
+  url?: string | null;
+};
+
+export type PurchaseListItemOffer = {
+  id: string;
+  list_item_id: string;
+  site_id: string;
+  supplier_profile_id: string | null;
+  place_name: string | null;
+  unit_price: number | null;
+  currency: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  supplier_profiles?: { org_name: string } | null;
 };
 
 export type UserProductLocation = {
@@ -184,6 +213,43 @@ export type PurchaseListItem = {
   created_at: string;
   updated_at: string;
   sites?: { name: string } | null;
+  purchase_list_item_offers?: PurchaseListItemOffer[];
+};
+
+export type Warehouse = {
+  id: string;
+  owner_id: string;
+  name: string;
+  address: string | null;
+  notes: string | null;
+  archived_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SiteProgressPhoto = {
+  id: string;
+  entry_id: string;
+  storage_path: string;
+  sort_order: number;
+  created_at: string;
+  /** Signed URL for display — filled at read time, not stored */
+  url?: string | null;
+};
+
+export type SiteProgressEntry = {
+  id: string;
+  site_id: string | null;
+  warehouse_id: string | null;
+  created_by: string;
+  logged_at: string;
+  note: string | null;
+  archived_at: string | null;
+  created_at: string;
+  updated_at: string;
+  site_progress_photos?: SiteProgressPhoto[];
+  sites?: { name: string } | null;
+  warehouses?: { name: string } | null;
 };
 
 export type RoleRequest = {

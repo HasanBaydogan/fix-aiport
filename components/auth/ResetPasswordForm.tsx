@@ -52,6 +52,7 @@ export function ResetPasswordForm() {
       submitting={submitting}
       status={status}
       submitLabel="Şifreyi güncelle"
+      framed={false}
     >
       <Field id="password" label="Yeni şifre" required error={errors.password}>
         <input

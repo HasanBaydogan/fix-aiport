@@ -7,7 +7,15 @@ import { ArchiveRecordButton } from "@/components/panel/ArchiveRecordButton";
 import { inputClass, buttonPrimaryClass } from "@/lib/forms/types";
 import type { PurchaseListItem } from "@/lib/supabase/database.types";
 
-export function PurchaseListRowActions({ row }: { row: PurchaseListItem }) {
+type SupplierOption = { id: string; org_name: string };
+
+export function PurchaseListRowActions({
+  row,
+  suppliers = [],
+}: {
+  row: PurchaseListItem;
+  suppliers?: SupplierOption[];
+}) {
   const [editing, setEditing] = useState(false);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -15,7 +23,7 @@ export function PurchaseListRowActions({ row }: { row: PurchaseListItem }) {
   if (!editing) {
     return (
       <div className="flex flex-wrap items-center gap-2">
-        <FulfillListItemButton item={row} />
+        <FulfillListItemButton item={row} suppliers={suppliers} />
         <button
           type="button"
           className="rounded-lg px-2 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50"

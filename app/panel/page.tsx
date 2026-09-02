@@ -16,10 +16,23 @@ export default async function PanelHomePage() {
         .from("sites")
         .select("*", { count: "exact", head: true })
         .is("archived_at", null),
-      supabase
-        .from("products")
-        .select("*", { count: "exact", head: true })
-        .eq("created_by", session.user.id),
+      session.role === "supplier"
+        ? (async () => {
+            const { data: profile } = await supabase
+              .from("supplier_profiles")
+              .select("id")
+              .eq("user_id", session.user.id)
+              .maybeSingle();
+            if (!profile) return { count: 0 };
+            return supabase
+              .from("products")
+              .select("*", { count: "exact", head: true })
+              .eq("supplier_profile_id", profile.id);
+          })()
+        : supabase
+            .from("products")
+            .select("*", { count: "exact", head: true })
+            .eq("created_by", session.user.id),
       supabase
         .from("role_requests")
         .select("id, status")
@@ -29,11 +42,28 @@ export default async function PanelHomePage() {
     ]);
 
   const quickActions = [
+    { href: "/panel/gunluk", label: "Günlük not ekle", desc: "İş raporu tut" },
     { href: "/panel/santiyeler", label: "Şantiye ekle", desc: "Yeni proje oluştur" },
     { href: "/panel/stok", label: "Stok kaydı", desc: "Malzeme girişi" },
     { href: "/panel/satin-alimlar", label: "Satın alma", desc: "Alım kaydet" },
     { href: "/panel/konumlar", label: "Konum işaretle", desc: "Harita için" },
-    { href: "/panel/urun-ekle", label: "Ürün ekle", desc: "Global katalog" },
+    ...(session.role === "supplier" || session.role === "admin"
+      ? [
+          {
+            href: "/panel/tedarikci",
+            label: "Tedarikçi paneli",
+            desc: "Profil, ürün, pin",
+          },
+        ]
+      : []),
+    {
+      href:
+        session.role === "supplier"
+          ? "/panel/tedarikci/urunler"
+          : "/panel/urun-ekle",
+      label: "Ürün ekle",
+      desc: session.role === "supplier" ? "Firma kataloğu" : "Global katalog",
+    },
     { href: "/harita", label: "Haritayı gör", desc: "Tedarik keşfi" },
   ];
 
@@ -47,7 +77,16 @@ export default async function PanelHomePage() {
 
       <div className="grid gap-3 sm:grid-cols-3">
         <StatTile label="Şantiyelerim" value={sites ?? 0} href="/panel/santiyeler" hint="Yönet →" />
-        <StatTile label="Ürünlerim" value={products ?? 0} href="/panel/urun-ekle" hint="Görüntüle →" />
+        <StatTile
+          label="Ürünlerim"
+          value={products ?? 0}
+          href={
+            session.role === "supplier"
+              ? "/panel/tedarikci/urunler"
+              : "/panel/urun-ekle"
+          }
+          hint="Görüntüle →"
+        />
         <StatTile
           label="Rolünüz"
           value={roleLabel(session.role)}

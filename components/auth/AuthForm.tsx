@@ -83,6 +83,16 @@ export function AuthForm({
       submitting={submitting}
       status={status}
       submitLabel={mode === "login" ? "Giriş yap" : "Kayıt ol"}
+      framed={false}
+      footer={
+        mode === "login" ? (
+          <div className="mt-3 text-right text-sm">
+            <Link href="/sifremi-unuttum" className="font-medium text-brand-600 hover:underline">
+              Şifremi unuttum
+            </Link>
+          </div>
+        ) : null
+      }
     >
       {mode === "signup" ? (
         <Field id="displayName" label="Ad Soyad" required error={errors.displayName}>
@@ -94,7 +104,7 @@ export function AuthForm({
           />
         </Field>
       ) : null}
-      <div className={mode === "signup" ? "mt-5" : ""}>
+      <div className={mode === "signup" ? "mt-5" : undefined}>
         <Field id="email" label="E-posta" required error={errors.email}>
           <input
             id="email"
@@ -118,13 +128,6 @@ export function AuthForm({
           />
         </Field>
       </div>
-      {mode === "login" ? (
-        <p className="mt-3 text-right text-sm">
-          <Link href="/sifremi-unuttum" className="font-medium text-brand-600 hover:underline">
-            Şifremi unuttum
-          </Link>
-        </p>
-      ) : null}
     </FormShell>
   );
 }

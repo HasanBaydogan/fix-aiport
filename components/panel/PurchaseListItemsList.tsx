@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PurchaseListRowActions } from "@/components/panel/PurchaseListRowActions";
+import { PurchaseListItemOffers } from "@/components/panel/PurchaseListItemOffers";
 import { listPanelClass } from "@/lib/ui/classes";
 import type { PurchaseListItem } from "@/lib/supabase/database.types";
 
@@ -10,16 +11,20 @@ function priorityBadge(priority: number) {
   return "bg-brand-50 text-brand-700";
 }
 
+type SupplierOption = { id: string; org_name: string };
+
 export function PurchaseListItemsList({
   items,
   showSite = true,
   showActions = true,
   viewAllHref,
+  suppliers = [],
 }: {
   items: PurchaseListItem[];
   showSite?: boolean;
   showActions?: boolean;
   viewAllHref?: string;
+  suppliers?: SupplierOption[];
 }) {
   if (!items.length) {
     return (
@@ -57,9 +62,10 @@ export function PurchaseListItemsList({
               {item.qty} {item.unit}
             </p>
             {item.notes ? <p className="mt-1 text-xs text-slate-500">{item.notes}</p> : null}
+            <PurchaseListItemOffers item={item} suppliers={suppliers} />
             {showActions ? (
               <div className="mt-3">
-                <PurchaseListRowActions row={item} />
+                <PurchaseListRowActions row={item} suppliers={suppliers} />
               </div>
             ) : null}
           </li>

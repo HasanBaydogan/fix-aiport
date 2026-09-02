@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PurchaseRowActions } from "@/components/panel/PurchaseRowActions";
+import { PurchaseProductLink } from "@/components/panel/PurchaseProductLink";
+import { formatMoney, purchaseLineTotal } from "@/lib/purchases";
 import { listPanelClass } from "@/lib/ui/classes";
 import type { Purchase } from "@/lib/supabase/database.types";
 
@@ -10,12 +14,14 @@ export function PurchaseListPanel({
   showActions = true,
   compact = false,
   viewAllHref,
+  siteId,
 }: {
   purchases: Purchase[];
   showSite?: boolean;
   showActions?: boolean;
   compact?: boolean;
   viewAllHref?: string;
+  siteId?: string | null;
 }) {
   if (!purchases.length) {
     return (
@@ -43,55 +49,74 @@ export function PurchaseListPanel({
               {showSite ? <th className="px-4 py-3">Şantiye</th> : null}
               <th className="px-4 py-3">Ürün</th>
               <th className="px-4 py-3">Miktar</th>
-              {!compact ? <th className="px-4 py-3">Fiyat</th> : null}
+              {!compact ? <th className="px-4 py-3">Birim fiyat</th> : null}
+              {!compact ? <th className="px-4 py-3">Toplam</th> : null}
               {showActions ? <th className="px-4 py-3">İşlem</th> : null}
             </tr>
           </thead>
           <tbody>
-            {purchases.map((row) => (
-              <tr key={row.id} className="border-t border-brand-100 align-top">
-                <td className="px-4 py-3">{row.purchased_at.slice(0, 10)}</td>
-                {showSite ? (
-                  <td className="px-4 py-3">{row.sites?.name ?? "—"}</td>
-                ) : null}
-                <td className="px-4 py-3 font-medium">{row.product_name}</td>
-                <td className="px-4 py-3">
-                  {row.qty} {row.unit}
-                </td>
-                {!compact ? (
+            {purchases.map((row) => {
+              const total = purchaseLineTotal(row.unit_price, row.qty);
+              return (
+                <tr key={row.id} className="border-t border-brand-100 align-top">
+                  <td className="px-4 py-3">{row.purchased_at.slice(0, 10)}</td>
+                  {showSite ? (
+                    <td className="px-4 py-3">{row.sites?.name ?? "—"}</td>
+                  ) : null}
                   <td className="px-4 py-3">
-                    {row.unit_price != null ? `${row.unit_price} ${row.currency}` : "—"}
+                    <PurchaseProductLink productName={row.product_name} siteId={siteId} />
                   </td>
-                ) : null}
-                {showActions ? (
                   <td className="px-4 py-3">
-                    <PurchaseRowActions row={row} />
+                    {row.qty} {row.unit}
                   </td>
-                ) : null}
-              </tr>
-            ))}
+                  {!compact ? (
+                    <td className="px-4 py-3">
+                      {row.unit_price != null
+                        ? formatMoney(Number(row.unit_price), row.currency)
+                        : "—"}
+                    </td>
+                  ) : null}
+                  {!compact ? (
+                    <td className="px-4 py-3">
+                      {total != null ? formatMoney(total, row.currency) : "—"}
+                    </td>
+                  ) : null}
+                  {showActions ? (
+                    <td className="px-4 py-3">
+                      <PurchaseRowActions row={row} />
+                    </td>
+                  ) : null}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
       <ul className={`${listPanelClass} md:hidden`}>
-        {purchases.map((row) => (
-          <li key={row.id} className="px-4 py-3 text-sm">
-            <div className="flex justify-between gap-2">
-              <p className="font-medium text-brand-900">{row.product_name}</p>
-              <span className="text-xs text-slate-500">{row.purchased_at.slice(0, 10)}</span>
-            </div>
-            <p className="text-slate-600">
-              {showSite ? `${row.sites?.name ?? "—"} · ` : ""}
-              {row.qty} {row.unit}
-              {row.unit_price != null ? ` · ${row.unit_price} ${row.currency}` : ""}
-            </p>
-            {showActions ? (
-              <div className="mt-2">
-                <PurchaseRowActions row={row} />
+        {purchases.map((row) => {
+          const total = purchaseLineTotal(row.unit_price, row.qty);
+          return (
+            <li key={row.id} className="px-4 py-3 text-sm">
+              <div className="flex justify-between gap-2">
+                <PurchaseProductLink productName={row.product_name} siteId={siteId} />
+                <span className="text-xs text-slate-500">{row.purchased_at.slice(0, 10)}</span>
               </div>
-            ) : null}
-          </li>
-        ))}
+              <p className="text-slate-600">
+                {showSite ? `${row.sites?.name ?? "—"} · ` : ""}
+                {row.qty} {row.unit}
+                {row.unit_price != null
+                  ? ` · birim ${formatMoney(Number(row.unit_price), row.currency)}`
+                  : ""}
+                {total != null ? ` · toplam ${formatMoney(total, row.currency)}` : ""}
+              </p>
+              {showActions ? (
+                <div className="mt-2">
+                  <PurchaseRowActions row={row} />
+                </div>
+              ) : null}
+            </li>
+          );
+        })}
       </ul>
     </>
   );
