@@ -7,6 +7,7 @@ import { GlobalMap } from "@/components/map/GlobalMap";
 import type { GlobalMapPin } from "@/components/map/GlobalMapInner";
 import { LocationPicker } from "@/components/map/LocationPicker";
 import { DeleteSupplierLocationButton } from "@/components/panel/DeleteSupplierLocationButton";
+import { EditSupplierLocationButton } from "@/components/panel/EditSupplierLocationButton";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -82,7 +83,7 @@ export default async function TedarikciPinlerPage() {
             {(locations ?? []).map((loc) => (
               <li
                 key={loc.id}
-                className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm"
+                className="flex flex-col gap-3 px-4 py-3 text-sm sm:flex-row sm:flex-wrap sm:items-start sm:justify-between"
               >
                 <div>
                   <p className="font-medium text-brand-900">
@@ -92,8 +93,14 @@ export default async function TedarikciPinlerPage() {
                     {loc.lat.toFixed(5)}, {loc.lng.toFixed(5)}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Badge status={loc.status} />
+                  <EditSupplierLocationButton
+                    locationId={loc.id}
+                    label={loc.label}
+                    lat={loc.lat}
+                    lng={loc.lng}
+                  />
                   <DeleteSupplierLocationButton locationId={loc.id} />
                 </div>
               </li>

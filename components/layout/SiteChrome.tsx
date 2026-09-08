@@ -152,6 +152,8 @@ export function PanelNav({ role }: { role: AppRole }) {
           variant="admin"
           items={[
             { href: "/panel/admin", label: "Moderasyon" },
+            { href: "/panel/admin/uyeler", label: "Üyeler" },
+            { href: "/panel/admin/tedarikciler", label: "Tedarikçiler" },
             { href: "/panel/kategoriler", label: "Kategoriler" },
           ]}
         />

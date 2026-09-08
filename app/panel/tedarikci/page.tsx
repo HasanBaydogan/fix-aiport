@@ -41,6 +41,11 @@ export default async function TedarikciDashboardPage() {
 
   const checklist = [
     {
+      done: Boolean(profile),
+      label: "Admin tarafından tedarikçi olarak eklenmek",
+      href: "/panel/tedarikci",
+    },
+    {
       done: Boolean(profile?.org_name && profile.kvkk_consent_at),
       label: "Profili tamamla ve KVKK onayını ver",
       href: "/panel/tedarikci/profil",
@@ -83,11 +88,23 @@ export default async function TedarikciDashboardPage() {
         }
       />
 
+      {!profile ? (
+        <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Firma profiliniz henüz oluşturulmamış. Bir admin sizi{" "}
+          <strong>Tedarikçiler</strong> sayfasından eklemelidir; ardından KVKK ve
+          profil bilgilerinizi tamamlayabilirsiniz.
+        </p>
+      ) : null}
+
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-2xl border border-brand-100 bg-white px-4 py-3">
           <p className="text-xs text-slate-500">Profil durumu</p>
           <div className="mt-1 flex items-center gap-2">
-            {profile ? <Badge status={profile.status} /> : <span className="text-sm text-slate-500">Yok</span>}
+            {profile ? (
+              <Badge status={profile.status} />
+            ) : (
+              <span className="text-sm text-slate-500">Yok</span>
+            )}
           </div>
         </div>
         <Link
@@ -95,7 +112,9 @@ export default async function TedarikciDashboardPage() {
           className="rounded-2xl border border-brand-100 bg-white px-4 py-3 hover:bg-brand-50/50"
         >
           <p className="text-xs text-slate-500">Firma ürünleri</p>
-          <p className="mt-1 text-2xl font-semibold text-brand-900">{productCount ?? 0}</p>
+          <p className="mt-1 text-2xl font-semibold text-brand-900">
+            {productCount ?? 0}
+          </p>
         </Link>
         <Link
           href="/panel/tedarikci/pinler"
@@ -111,7 +130,10 @@ export default async function TedarikciDashboardPage() {
         </Link>
       </div>
 
-      <SectionCard title="Kurulum adımları" description="Haritada görünmek için sırayı tamamlayın.">
+      <SectionCard
+        title="Kurulum adımları"
+        description="Haritada görünmek için sırayı tamamlayın."
+      >
         <ul className={listPanelClass}>
           {checklist.map((item) => (
             <li
@@ -128,11 +150,15 @@ export default async function TedarikciDashboardPage() {
                 >
                   {item.done ? "✓" : "•"}
                 </span>
-                <span className={item.done ? "text-slate-500 line-through" : "text-brand-900"}>
+                <span
+                  className={
+                    item.done ? "text-slate-500 line-through" : "text-brand-900"
+                  }
+                >
                   {item.label}
                 </span>
               </div>
-              {!item.done ? (
+              {!item.done && profile ? (
                 <Link href={item.href} className={buttonCompactClass}>
                   Git
                 </Link>
@@ -142,29 +168,31 @@ export default async function TedarikciDashboardPage() {
         </ul>
       </SectionCard>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Link
-          href="/panel/tedarikci/profil"
-          className="rounded-2xl border border-brand-100 bg-white px-4 py-3 hover:border-brand-200"
-        >
-          <p className="font-medium text-brand-900">Profil</p>
-          <p className="text-xs text-slate-500">Unvan, KVKK, iletişim</p>
-        </Link>
-        <Link
-          href="/panel/tedarikci/urunler"
-          className="rounded-2xl border border-brand-100 bg-white px-4 py-3 hover:border-brand-200"
-        >
-          <p className="font-medium text-brand-900">Ürünler</p>
-          <p className="text-xs text-slate-500">Firma kataloğu</p>
-        </Link>
-        <Link
-          href="/panel/tedarikci/pinler"
-          className="rounded-2xl border border-brand-100 bg-white px-4 py-3 hover:border-brand-200"
-        >
-          <p className="font-medium text-brand-900">Harita pinleri</p>
-          <p className="text-xs text-slate-500">Depo / şube konumları</p>
-        </Link>
-      </div>
+      {profile ? (
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Link
+            href="/panel/tedarikci/profil"
+            className="rounded-2xl border border-brand-100 bg-white px-4 py-3 hover:border-brand-200"
+          >
+            <p className="font-medium text-brand-900">Profil</p>
+            <p className="text-xs text-slate-500">Unvan, KVKK, iletişim</p>
+          </Link>
+          <Link
+            href="/panel/tedarikci/urunler"
+            className="rounded-2xl border border-brand-100 bg-white px-4 py-3 hover:border-brand-200"
+          >
+            <p className="font-medium text-brand-900">Ürünler</p>
+            <p className="text-xs text-slate-500">Firma kataloğu</p>
+          </Link>
+          <Link
+            href="/panel/tedarikci/pinler"
+            className="rounded-2xl border border-brand-100 bg-white px-4 py-3 hover:border-brand-200"
+          >
+            <p className="font-medium text-brand-900">Harita pinleri</p>
+            <p className="text-xs text-slate-500">Depo / şube konumları</p>
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 }

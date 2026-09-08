@@ -13,9 +13,21 @@ const MapClick = dynamic(() => import("@/components/map/MapClickInner"), {
   ),
 });
 
-export function LocationPicker({ optional = false }: { optional?: boolean }) {
-  const [lat, setLat] = useState("");
-  const [lng, setLng] = useState("");
+export function LocationPicker({
+  optional = false,
+  defaultLat,
+  defaultLng,
+}: {
+  optional?: boolean;
+  defaultLat?: number | null;
+  defaultLng?: number | null;
+}) {
+  const [lat, setLat] = useState(
+    defaultLat != null && Number.isFinite(defaultLat) ? String(defaultLat) : "",
+  );
+  const [lng, setLng] = useState(
+    defaultLng != null && Number.isFinite(defaultLng) ? String(defaultLng) : "",
+  );
 
   return (
     <div className="space-y-3">

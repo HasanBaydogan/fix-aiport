@@ -18,9 +18,8 @@ import {
   resolveSupplierProfileForUser,
   resolveSupplierPublishStatus,
 } from "@/lib/suppliers/resolve";
-import { createServiceClient } from "@/lib/supabase/admin";
 import { resolveUnitPrice, normalizeProductName, productNamesMatch } from "@/lib/purchases";
-import type { AppRole, ContentStatus } from "@/lib/supabase/database.types";
+import type { ContentStatus } from "@/lib/supabase/database.types";
 
 function revalidateSupplierPaths(supplierProfileId?: string | null) {
   revalidatePath("/panel/tedarikci");
@@ -320,7 +319,7 @@ export async function createProduct(formData: FormData) {
   if (isSupplierRole) {
     const profile = await getSupplierProfileForUser(session);
     if (!profile) {
-      return { error: "Önce tedarikçi profilinizi oluşturun." };
+      return { error: "Firma profiliniz yok. Admin sizi tedarikçi olarak eklemelidir." };
     }
     supplierProfileId = profile.id;
     productStatus = resolveSupplierPublishStatus(profile);
@@ -410,7 +409,7 @@ export async function updateSupplierProduct(formData: FormData) {
 
   const profile = await getSupplierProfileForUser(session);
   if (!profile && session.role !== "admin") {
-    return { error: "Önce tedarikçi profilinizi oluşturun." };
+    return { error: "Firma profiliniz yok. Admin sizi tedarikçi olarak eklemelidir." };
   }
 
   const { data: existing } = await session.supabase
@@ -1258,9 +1257,16 @@ export async function upsertSupplierProfile(formData: FormData) {
     .eq("user_id", session.user.id)
     .maybeSingle();
 
-  const keepPublished = existing?.status === "published";
+  // R2: supplier_profiles insert yalnızca admin panelden; tedarikçi sadece günceller.
+  if (!existing) {
+    return {
+      error:
+        "Firma profiliniz henüz oluşturulmamış. Admin sizi tedarikçi olarak eklemelidir.",
+    };
+  }
+
+  const keepPublished = existing.status === "published";
   const payload = {
-    user_id: session.user.id,
     org_name,
     city: city || null,
     district: district || null,
@@ -1271,15 +1277,13 @@ export async function upsertSupplierProfile(formData: FormData) {
     status: (keepPublished ? "published" : "pending") as ContentStatus,
   };
 
-  const { error } = existing
-    ? await session.supabase
-        .from("supplier_profiles")
-        .update(payload)
-        .eq("id", existing.id)
-    : await session.supabase.from("supplier_profiles").insert(payload);
+  const { error } = await session.supabase
+    .from("supplier_profiles")
+    .update(payload)
+    .eq("id", existing.id);
 
   if (error) return { error: error.message };
-  revalidateSupplierPaths(existing?.id);
+  revalidateSupplierPaths(existing.id);
   return {
     ok: true,
     message: keepPublished
@@ -1296,7 +1300,7 @@ export async function createSupplierLocation(formData: FormData) {
   }
 
   const profile = await getSupplierProfileForUser(session);
-  if (!profile) return { error: "Önce tedarikçi profili oluşturun." };
+  if (!profile) return { error: "Firma profiliniz yok. Admin sizi tedarikçi olarak eklemelidir." };
 
   const label = String(formData.get("label") ?? "").trim();
   const lat = parseNum(formData.get("lat"));
@@ -1337,7 +1341,7 @@ export async function updateSupplierLocation(formData: FormData) {
 
   const profile = await getSupplierProfileForUser(session);
   if (!profile && session.role !== "admin") {
-    return { error: "Önce tedarikçi profili oluşturun." };
+    return { error: "Firma profiliniz yok. Admin sizi tedarikçi olarak eklemelidir." };
   }
 
   const { data: existing } = await session.supabase
@@ -1500,54 +1504,15 @@ export async function moderateContent(
   }
 
   revalidatePath("/panel/admin");
+  revalidatePath("/panel/admin/tedarikciler");
+  revalidatePath("/panel/admin/uyeler");
   revalidatePath("/harita");
   revalidatePath("/urunler");
   revalidatePath("/panel/tedarikci");
   if (table === "supplier_profiles") {
     revalidatePath(`/tedarikci/${id}`);
+    revalidatePath(`/panel/admin/tedarikciler/${id}`);
   }
-  return { ok: true };
-}
-
-export async function reviewRoleRequest(
-  requestId: string,
-  decision: "approved" | "rejected",
-  adminNote?: string,
-) {
-  const session = await getSessionUser();
-  if (!session || session.role !== "admin") return { error: "Admin gerekli." };
-
-  const { data: req, error: fetchError } = await session.supabase
-    .from("role_requests")
-    .select("*")
-    .eq("id", requestId)
-    .single();
-
-  if (fetchError || !req) return { error: fetchError?.message ?? "Bulunamadı." };
-
-  const { error } = await session.supabase
-    .from("role_requests")
-    .update({
-      status: decision,
-      admin_note: adminNote || null,
-      reviewed_by: session.user.id,
-    })
-    .eq("id", requestId);
-
-  if (error) return { error: error.message };
-
-  if (decision === "approved") {
-    const admin = createServiceClient();
-    await admin.auth.admin.updateUserById(req.user_id, {
-      app_metadata: { role: "supplier" as AppRole },
-    });
-    await admin
-      .from("profiles")
-      .update({ role: "supplier" })
-      .eq("id", req.user_id);
-  }
-
-  revalidatePath("/panel/admin");
   return { ok: true };
 }
 

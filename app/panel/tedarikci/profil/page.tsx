@@ -55,11 +55,17 @@ export default async function TedarikciProfilPage() {
         </p>
       ) : null}
 
+      {!profile ? (
+        <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Firma profiliniz henüz oluşturulmamış. Bir admin sizi tedarikçi olarak
+          ekledikten sonra bu formu doldurabilirsiniz.
+        </p>
+      ) : (
       <SectionCard title="Profil bilgileri">
         <ActionForm
           action={upsertSupplierProfile}
           submitLabel={
-            profile?.status === "published"
+            profile.status === "published"
               ? "Profili güncelle"
               : "Profili kaydet / onaya gönder"
           }
@@ -69,28 +75,28 @@ export default async function TedarikciProfilPage() {
               name="org_name"
               label="Ticari unvan"
               required
-              defaultValue={profile?.org_name}
+              defaultValue={profile.org_name}
             />
-            <TextInput name="city" label="Şehir" defaultValue={profile?.city ?? ""} />
+            <TextInput name="city" label="Şehir" defaultValue={profile.city ?? ""} />
             <TextInput
               name="district"
               label="İlçe"
-              defaultValue={profile?.district ?? ""}
+              defaultValue={profile.district ?? ""}
             />
             <TextInput
               name="public_phone"
               label="İş telefonu (public)"
-              defaultValue={profile?.public_phone ?? ""}
+              defaultValue={profile.public_phone ?? ""}
             />
             <TextInput
               name="website"
               label="Web sitesi"
-              defaultValue={profile?.website ?? ""}
+              defaultValue={profile.website ?? ""}
             />
             <TextInput
               name="category_focus"
               label="Odak kategori"
-              defaultValue={profile?.category_focus ?? ""}
+              defaultValue={profile.category_focus ?? ""}
             />
           </div>
           <label className="mt-4 flex items-start gap-3 rounded-2xl border border-brand-200 bg-brand-50/50 p-4 text-sm text-brand-900">
@@ -98,7 +104,7 @@ export default async function TedarikciProfilPage() {
               type="checkbox"
               name="kvkk_consent"
               className="mt-1"
-              defaultChecked={Boolean(profile?.kvkk_consent_at)}
+              defaultChecked={Boolean(profile.kvkk_consent_at)}
             />
             <span>
               Public profil ve harita pinimin KVKK uygun alanlarla yayınlanmasını
@@ -107,6 +113,7 @@ export default async function TedarikciProfilPage() {
           </label>
         </ActionForm>
       </SectionCard>
+      )}
     </div>
   );
 }

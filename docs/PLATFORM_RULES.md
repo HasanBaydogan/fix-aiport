@@ -10,7 +10,9 @@ Her yeni özellik / senaryoda bu kurallar uygulanır. PR veya plan notunda: Sena
 ## R2 Roller
 - `buyer` | `supplier` | `admin`
 - Yetki yalnızca `app_metadata.role` (asla `user_metadata`)
-- Varsayılan kayıt: buyer; supplier Admin onayı ile
+- Varsayılan kayıt: buyer
+- Supplier yalnızca admin panelden (`/panel/admin/tedarikciler`): firma oluştur + sahip ata veya e-posta daveti; self-request yok
+- `supplier_profiles` insert yalnızca admin; tedarikçi profilini günceller (KVKK dahil)
 
 ## R3 Moderasyon
 - Global içerik: `draft | pending | published | rejected | archived`

@@ -3,43 +3,35 @@ import { getSessionUser, roleLabel } from "@/lib/auth/roles";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatTile } from "@/components/ui/StatTile";
-import { buttonCompactClass } from "@/lib/ui/classes";
 
 export default async function PanelHomePage() {
   const session = await getSessionUser();
   if (!session) redirect("/giris?next=/panel");
   const supabase = session.supabase;
 
-  const [{ count: sites }, { count: products }, { data: pendingReq }] =
-    await Promise.all([
-      supabase
-        .from("sites")
-        .select("*", { count: "exact", head: true })
-        .is("archived_at", null),
-      session.role === "supplier"
-        ? (async () => {
-            const { data: profile } = await supabase
-              .from("supplier_profiles")
-              .select("id")
-              .eq("user_id", session.user.id)
-              .maybeSingle();
-            if (!profile) return { count: 0 };
-            return supabase
-              .from("products")
-              .select("*", { count: "exact", head: true })
-              .eq("supplier_profile_id", profile.id);
-          })()
-        : supabase
+  const [{ count: sites }, { count: products }] = await Promise.all([
+    supabase
+      .from("sites")
+      .select("*", { count: "exact", head: true })
+      .is("archived_at", null),
+    session.role === "supplier"
+      ? (async () => {
+          const { data: profile } = await supabase
+            .from("supplier_profiles")
+            .select("id")
+            .eq("user_id", session.user.id)
+            .maybeSingle();
+          if (!profile) return { count: 0 };
+          return supabase
             .from("products")
             .select("*", { count: "exact", head: true })
-            .eq("created_by", session.user.id),
-      supabase
-        .from("role_requests")
-        .select("id, status")
-        .eq("user_id", session.user.id)
-        .eq("status", "pending")
-        .maybeSingle(),
-    ]);
+            .eq("supplier_profile_id", profile.id);
+        })()
+      : supabase
+          .from("products")
+          .select("*", { count: "exact", head: true })
+          .eq("created_by", session.user.id),
+  ]);
 
   const quickActions = [
     { href: "/panel/gunluk", label: "Günlük not ekle", desc: "İş raporu tut" },
@@ -109,23 +101,6 @@ export default async function PanelHomePage() {
           ))}
         </div>
       </div>
-
-      {session.role === "buyer" && !pendingReq ? (
-        <form action="/api/role-request" method="post" className="rounded-2xl border border-brand-100 bg-brand-50/40 p-5">
-          <p className="text-sm text-slate-700">
-            Tedarikçi misiniz? Public profil ve harita pini için rol başvurusu yapın (R2).
-          </p>
-          <button type="submit" className={`${buttonCompactClass} mt-3`}>
-            Tedarikçi olmak istiyorum
-          </button>
-        </form>
-      ) : null}
-
-      {pendingReq ? (
-        <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Tedarikçi rol başvurunuz inceleniyor. Onay sonrası tedarikçi paneli açılacaktır.
-        </p>
-      ) : null}
     </div>
   );
 }

@@ -22,11 +22,11 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_anon_or_publishable_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
-**Service role anahtarı:** Supabase Dashboard → **Project Settings** → **API** → `service_role` (secret). Bu anahtar yalnızca sunucuda kullanılır; tedarikçi rol başvurusu onayı (`/panel/admin`) için zorunludur. Boş bırakılırsa admin panelinde uyarı görünür ve rol onayı çalışmaz.
+**Service role anahtarı:** Supabase Dashboard → **Project Settings** → **API** → `service_role` (secret). Bu anahtar yalnızca sunucuda kullanılır; admin üye rolü değişikliği ve tedarikçi daveti (`/panel/admin/uyeler`, `/panel/admin/tedarikciler`) için zorunludur. Boş bırakılırsa admin panelinde uyarı görünür.
 
 4. Migration dosyalarını sırayla SQL Editor'de çalıştırın (`supabase/migrations/`).
 
-5. İlk admin: Auth’ta bir kullanıcı oluşturun, ardından Dashboard → Authentication → user → `app_metadata` içine `{"role":"admin"}` yazın ve `profiles.role` alanını `admin` yapın. Oturumu yenileyin.
+5. İlk admin: Auth’ta bir kullanıcı oluşturun, ardından Dashboard → Authentication → user → `app_metadata` içine `{"role":"admin"}` yazın ve `profiles.role` alanını `admin` yapın. Oturumu yenileyin. Sonraki adminler `/panel/admin/uyeler` üzerinden de atanabilir.
 
 ```bash
 npm install
@@ -47,7 +47,8 @@ Roller: `buyer` | `supplier` | `admin` — yalnızca `app_metadata` (R2).
 
 - `/` landing · `/tamirat` · `/urunler` · `/harita`
 - `/giris` · `/kayit` · `/sifremi-unuttum`
-- `/panel/*` (auth) · `/panel/admin` (admin)
+- `/panel/*` (auth) · `/panel/admin` (moderasyon) · `/panel/admin/uyeler` · `/panel/admin/tedarikciler` (admin)
+- Tedarikçi yalnızca admin panelden eklenir; self-request yok (R2)
 
 ## Deploy
 
