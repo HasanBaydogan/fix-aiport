@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/roles";
-import { listBuyerCandidates } from "@/lib/admin/users";
+import { getEmailsByUserIds, listBuyerCandidates } from "@/lib/admin/users";
 import { AdminCreateSupplierForm } from "@/components/panel/AdminCreateSupplierForm";
 import { ServiceRoleBanner } from "@/components/panel/ServiceRoleBanner";
 import { Badge } from "@/components/ui/Badge";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { listPanelClass } from "@/lib/ui/classes";
-import { createServiceClient, isServiceRoleConfigured } from "@/lib/supabase/admin";
+import { isServiceRoleConfigured } from "@/lib/supabase/admin";
 
 export default async function AdminTedarikcilerPage() {
   const session = await getSessionUser();
@@ -21,23 +21,15 @@ export default async function AdminTedarikcilerPage() {
     )
     .order("created_at", { ascending: false });
 
-  const emailById = new Map<string, string | null>();
-  if (isServiceRoleConfigured()) {
-    const admin = createServiceClient();
-    let page = 1;
-    const perPage = 200;
-    for (;;) {
-      const { data } = await admin.auth.admin.listUsers({ page, perPage });
-      for (const u of data?.users ?? []) {
-        emailById.set(u.id, u.email ?? null);
-      }
-      if ((data?.users.length ?? 0) < perPage) break;
-      page += 1;
-      if (page > 50) break;
-    }
-  }
+  const ownerIds = (profiles ?? []).map((p) => p.user_id);
+  const [emailById, buyersResult] = await Promise.all([
+    isServiceRoleConfigured()
+      ? getEmailsByUserIds(ownerIds)
+      : Promise.resolve(new Map<string, string | null>()),
+    listBuyerCandidates(),
+  ]);
 
-  const { buyers } = await listBuyerCandidates();
+  const buyers = buyersResult.buyers ?? [];
 
   return (
     <div className="space-y-8">
@@ -61,7 +53,7 @@ export default async function AdminTedarikcilerPage() {
         title="Yeni tedarikçi"
         description="Firma profili pending oluşur; sahip KVKK onayını tamamladıktan sonra moderasyondan yayınlanır."
       >
-        <AdminCreateSupplierForm buyers={buyers ?? []} />
+        <AdminCreateSupplierForm buyers={buyers} />
       </SectionCard>
 
       <section className="space-y-3">

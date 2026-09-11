@@ -16,11 +16,32 @@ export type AdminMemberRow = {
 };
 
 function revalidateAdminMemberPaths() {
-  revalidatePath("/panel/admin");
   revalidatePath("/panel/admin/uyeler");
   revalidatePath("/panel/admin/tedarikciler");
-  revalidatePath("/panel");
-  revalidatePath("/panel/tedarikci");
+}
+
+/** Yalnızca ihtiyaç duyulan kullanıcılar için e-posta — tam listUsers yok */
+export async function getEmailsByUserIds(
+  userIds: string[],
+): Promise<Map<string, string | null>> {
+  const emailById = new Map<string, string | null>();
+  const unique = [...new Set(userIds.filter(Boolean))];
+  if (unique.length === 0 || !isServiceRoleConfigured()) return emailById;
+
+  const admin = createServiceClient();
+  const chunkSize = 8;
+  for (let i = 0; i < unique.length; i += chunkSize) {
+    const chunk = unique.slice(i, i + chunkSize);
+    const results = await Promise.all(
+      chunk.map(async (id) => {
+        const { data, error } = await admin.auth.admin.getUserById(id);
+        if (error || !data.user) return [id, null] as const;
+        return [id, data.user.email ?? null] as const;
+      }),
+    );
+    for (const [id, email] of results) emailById.set(id, email);
+  }
+  return emailById;
 }
 
 export async function listAdminMembers(roleFilter?: AppRole | "all"): Promise<{
@@ -44,37 +65,22 @@ export async function listAdminMembers(roleFilter?: AppRole | "all"): Promise<{
     query = query.eq("role", roleFilter);
   }
 
-  const { data: profiles, error } = await query;
-  if (error) return { error: error.message };
+  const [{ data: profiles, error }, { data: supplierProfiles }] =
+    await Promise.all([
+      query,
+      session.supabase
+        .from("supplier_profiles")
+        .select("id, user_id, org_name")
+        .neq("status", "archived"),
+    ]);
 
-  const { data: supplierProfiles } = await session.supabase
-    .from("supplier_profiles")
-    .select("id, user_id, org_name")
-    .neq("status", "archived");
+  if (error) return { error: error.message };
 
   const supplierByUser = new Map(
     (supplierProfiles ?? []).map((sp) => [sp.user_id, sp]),
   );
 
-  const admin = createServiceClient();
-  const emailById = new Map<string, string | null>();
-
-  // Paginate auth users for email lookup
-  let page = 1;
-  const perPage = 200;
-  for (;;) {
-    const { data, error: listError } = await admin.auth.admin.listUsers({
-      page,
-      perPage,
-    });
-    if (listError) return { error: listError.message };
-    for (const u of data.users) {
-      emailById.set(u.id, u.email ?? null);
-    }
-    if (data.users.length < perPage) break;
-    page += 1;
-    if (page > 50) break;
-  }
+  const emailById = await getEmailsByUserIds((profiles ?? []).map((p) => p.id));
 
   const members: AdminMemberRow[] = (profiles ?? []).map((p) => {
     const sp = supplierByUser.get(p.id);
@@ -121,6 +127,13 @@ export async function adminSetUserRole(formData: FormData) {
 
   if (!target) return { error: "Kullanıcı bulunamadı." };
 
+  if (target.role === "supplier") {
+    return {
+      error:
+        "Tedarikçi rolü buradan değiştirilemez. Yönetim Tedarikçiler sayfasından yapılır.",
+    };
+  }
+
   if (target.role === nextRole) {
     return { ok: true, message: `Rol zaten ${roleLabel(nextRole)}.` };
   }
@@ -129,7 +142,6 @@ export async function adminSetUserRole(formData: FormData) {
     return { error: "Admin yükseltmesi için onay kutusunu işaretleyin." };
   }
 
-  // Son admin'i düşürmeyi engelle
   if (target.role === "admin" && nextRole !== "admin") {
     const { count } = await session.supabase
       .from("profiles")
@@ -144,15 +156,6 @@ export async function adminSetUserRole(formData: FormData) {
   }
 
   const admin = createServiceClient();
-
-  // supplier → buyer: arşivle profil
-  if (target.role === "supplier" && nextRole === "buyer") {
-    await admin
-      .from("supplier_profiles")
-      .update({ status: "archived" })
-      .eq("user_id", userId)
-      .neq("status", "archived");
-  }
 
   const { error: authError } = await admin.auth.admin.updateUserById(userId, {
     app_metadata: { role: nextRole },
@@ -185,46 +188,29 @@ export async function listBuyerCandidates(): Promise<{
     return { error: "SUPABASE_SERVICE_ROLE_KEY gerekli." };
   }
 
-  const { data: profiles, error } = await session.supabase
-    .from("profiles")
-    .select("id, display_name, role")
-    .eq("role", "buyer")
-    .order("display_name");
+  const [{ data: profiles, error }, { data: existingOwners }] = await Promise.all([
+    session.supabase
+      .from("profiles")
+      .select("id, display_name, role")
+      .eq("role", "buyer")
+      .order("display_name"),
+    session.supabase
+      .from("supplier_profiles")
+      .select("user_id")
+      .neq("status", "archived"),
+  ]);
 
   if (error) return { error: error.message };
 
-  const { data: existingOwners } = await session.supabase
-    .from("supplier_profiles")
-    .select("user_id")
-    .neq("status", "archived");
-
   const owned = new Set((existingOwners ?? []).map((o) => o.user_id));
+  const candidates = (profiles ?? []).filter((p) => !owned.has(p.id));
+  const emailById = await getEmailsByUserIds(candidates.map((p) => p.id));
 
-  const admin = createServiceClient();
-  const emailById = new Map<string, string | null>();
-  let page = 1;
-  const perPage = 200;
-  for (;;) {
-    const { data, error: listError } = await admin.auth.admin.listUsers({
-      page,
-      perPage,
-    });
-    if (listError) return { error: listError.message };
-    for (const u of data.users) {
-      emailById.set(u.id, u.email ?? null);
-    }
-    if (data.users.length < perPage) break;
-    page += 1;
-    if (page > 50) break;
-  }
-
-  const buyers = (profiles ?? [])
-    .filter((p) => !owned.has(p.id))
-    .map((p) => ({
-      id: p.id,
-      display_name: p.display_name,
-      email: emailById.get(p.id) ?? null,
-    }));
+  const buyers = candidates.map((p) => ({
+    id: p.id,
+    display_name: p.display_name,
+    email: emailById.get(p.id) ?? null,
+  }));
 
   return { buyers };
 }

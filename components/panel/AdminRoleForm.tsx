@@ -17,6 +17,7 @@ function labelFor(role: AppRole): string {
   }
 }
 
+/** buyer ↔ admin. Tedarikçi rolü burada yönetilmez. */
 export function AdminRoleForm({
   userId,
   currentRole,
@@ -29,11 +30,16 @@ export function AdminRoleForm({
   const [message, setMessage] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [role, setRole] = React.useState<AppRole>(
-    currentRole === "supplier" ? "buyer" : currentRole,
+    currentRole === "admin" ? "admin" : "buyer",
   );
 
-  const options: AppRole[] =
-    currentRole === "supplier" ? ["buyer"] : ["buyer", "admin"];
+  if (currentRole === "supplier") {
+    return (
+      <p className="text-xs text-slate-500">
+        Tedarikçi rolü sabittir. Firma yönetimi Tedarikçiler sayfasından yapılır.
+      </p>
+    );
+  }
 
   return (
     <form
@@ -65,11 +71,8 @@ export function AdminRoleForm({
           className="rounded-lg border border-brand-200 bg-white px-2 py-1.5 text-xs"
           disabled={pending}
         >
-          {options.map((r) => (
-            <option key={r} value={r}>
-              {labelFor(r)}
-            </option>
-          ))}
+          <option value="buyer">{labelFor("buyer")}</option>
+          <option value="admin">{labelFor("admin")}</option>
         </select>
       </div>
       {role === "admin" && currentRole !== "admin" ? (
@@ -83,12 +86,6 @@ export function AdminRoleForm({
       </button>
       {error ? <p className="w-full text-xs text-red-600">{error}</p> : null}
       {message ? <p className="w-full text-xs text-emerald-700">{message}</p> : null}
-      {currentRole === "supplier" ? (
-        <p className="w-full text-[11px] text-slate-500">
-          Tedarikçiyi alıcıya düşürmek firmayı arşivler. Yeni tedarikçi ataması Tedarikçiler
-          sayfasından yapılır.
-        </p>
-      ) : null}
     </form>
   );
 }

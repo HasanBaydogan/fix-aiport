@@ -115,6 +115,20 @@ export default async function AdminUyelerPage({
               </div>
               {m.role === "admin" && m.id === session.user.id ? (
                 <p className="text-xs text-slate-500">Sizin hesabınız</p>
+              ) : m.role === "supplier" ? (
+                <p className="max-w-[14rem] text-xs text-slate-500">
+                  Tedarikçi rolü sabittir.{" "}
+                  {m.supplier_profile_id ? (
+                    <Link
+                      href={`/panel/admin/tedarikciler/${m.supplier_profile_id}`}
+                      className="font-medium text-brand-700 underline"
+                    >
+                      Firmayı yönet
+                    </Link>
+                  ) : (
+                    "Firma Tedarikçiler sayfasından yönetilir."
+                  )}
+                </p>
               ) : (
                 <AdminRoleForm userId={m.id} currentRole={m.role} />
               )}

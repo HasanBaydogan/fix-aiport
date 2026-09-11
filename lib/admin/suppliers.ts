@@ -73,18 +73,35 @@ export async function adminCreateSupplier(formData: FormData) {
       });
 
     if (inviteError || !invited.user) {
-      // Kullanıcı zaten varsa e-posta ile bul
-      const { data: listed } = await admin.auth.admin.listUsers({
-        page: 1,
-        perPage: 200,
-      });
-      const existing = listed?.users.find(
-        (u) => u.email?.toLowerCase() === inviteEmail,
-      );
-      if (!existing) {
+      // Kullanıcı zaten varsa e-posta ile bul (tam listUsers yok)
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      let existingId: string | null = null;
+      if (url && key) {
+        const res = await fetch(
+          `${url}/auth/v1/admin/users?email=${encodeURIComponent(inviteEmail)}`,
+          {
+            headers: {
+              Authorization: `Bearer ${key}`,
+              apikey: key,
+            },
+            cache: "no-store",
+          },
+        );
+        if (res.ok) {
+          const body = (await res.json()) as {
+            users?: Array<{ id: string; email?: string }>;
+          };
+          const match = (body.users ?? []).find(
+            (u) => u.email?.toLowerCase() === inviteEmail,
+          );
+          existingId = match?.id ?? null;
+        }
+      }
+      if (!existingId) {
         return { error: inviteError?.message ?? "Davet gönderilemedi." };
       }
-      ownerId = existing.id;
+      ownerId = existingId;
     } else {
       ownerId = invited.user.id;
     }
