@@ -16,11 +16,14 @@
 3. `.env.local` oluşturun (`.env.example` dosyasındaki açıklamalara bakın):
 
 ```env
+NEXT_PUBLIC_SITE_URL=https://fix.aiport.tr
 NEXT_PUBLIC_SUBMITKIT_FORM_ID=your_form_id_or_full_url
 NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_anon_or_publishable_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
+
+**Auth redirect:** Supabase Dashboard → **Authentication** → **URL Configuration** içinde Redirect URLs listesine `https://fix.aiport.tr/auth/callback` ekleyin (Site URL: `https://fix.aiport.tr`). Tedarikçi daveti bu callback üzerinden şifre belirleme sayfasına (`/auth/sifre-yenile`) gider.
 
 **Service role anahtarı:** Supabase Dashboard → **Project Settings** → **API** → `service_role` (secret). Bu anahtar yalnızca sunucuda kullanılır; admin üye rolü değişikliği ve tedarikçi daveti (`/panel/admin/uyeler`, `/panel/admin/tedarikciler`) için zorunludur. Boş bırakılırsa admin panelinde uyarı görünür.
 

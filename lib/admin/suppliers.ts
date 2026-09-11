@@ -61,15 +61,21 @@ export async function adminCreateSupplier(formData: FormData) {
       return { error: "Geçerli bir davet e-postası girin." };
     }
 
-    const siteUrl =
+    const siteUrl = (
       process.env.NEXT_PUBLIC_SITE_URL ||
       process.env.NEXT_PUBLIC_APP_URL ||
-      "http://localhost:3000";
+      (process.env.VERCEL_PROJECT_PRODUCTION_URL
+        ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+        : null) ||
+      "http://localhost:3000"
+    ).replace(/\/$/, "");
+
+    const inviteRedirectTo = `${siteUrl}/auth/callback?next=${encodeURIComponent("/auth/sifre-yenile?davet=1")}`;
 
     const { data: invited, error: inviteError } =
       await admin.auth.admin.inviteUserByEmail(inviteEmail, {
         data: {},
-        redirectTo: `${siteUrl}/giris`,
+        redirectTo: inviteRedirectTo,
       });
 
     if (inviteError || !invited.user) {

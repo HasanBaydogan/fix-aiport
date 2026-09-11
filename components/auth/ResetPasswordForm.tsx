@@ -7,7 +7,13 @@ import { Field } from "@/components/forms/fields/Field";
 import { FormShell } from "@/components/forms/FormShell";
 import { inputClass, type FormStatus } from "@/lib/forms/types";
 
-export function ResetPasswordForm() {
+export function ResetPasswordForm({
+  successRedirect = "/panel",
+  submitLabel = "Şifreyi güncelle",
+}: {
+  successRedirect?: string;
+  submitLabel?: string;
+}) {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -34,7 +40,7 @@ export function ResetPasswordForm() {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       setStatus({ type: "success", message: "Şifreniz güncellendi. Yönlendiriliyorsunuz…" });
-      router.push("/panel");
+      router.push(successRedirect);
       router.refresh();
     } catch (error) {
       setStatus({
@@ -51,7 +57,7 @@ export function ResetPasswordForm() {
       onSubmit={handleSubmit}
       submitting={submitting}
       status={status}
-      submitLabel="Şifreyi güncelle"
+      submitLabel={submitLabel}
       framed={false}
     >
       <Field id="password" label="Yeni şifre" required error={errors.password}>
